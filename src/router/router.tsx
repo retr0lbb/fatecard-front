@@ -1,13 +1,10 @@
 import { Route, Routes } from "react-router";
-import { App } from "../App";
-import CriarPalestra from "../cadastropalestra";
-
-
+import Page from "../pages/main"
 
 export function MyRouter(){
     return(
     <Routes>
-        <Route path="/" element={<CriarPalestra />} />
+        <Route path="/" element={<Page />} />
     </Routes>
     )
 }
