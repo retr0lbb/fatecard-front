@@ -146,7 +146,7 @@ const App: React.FC = () => {
             </div>
           </div>
           
-          <div className="col-span-3 space-y-6 bg-green-500">
+          <div className="col-span-3 space-y-6">
             <LectureDetail
               date={new Date()}
               desc='Palestra sobre o controle emocional de chimpanzes sul africanos enquanto jogam clash royale Palestra sobre o controle emocional de chimpanzes sul africanos enquanto jogam clash royalePalestra sobre o controle emocional de chimpanzes sul africanos enquanto jogam clash royalePalestra sobre o controle emocional de chimpanzes sul africanos enquanto jogam clash royalePalestra sobre o controle emocional de chimpanzes sul africanos enquanto jogam clash royale'
