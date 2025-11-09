@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Play, Square } from 'lucide-react';
 import { LectureDetail } from '../components/LectureDetail';
+import { PalestrasNavigation } from '../components/PalestrasNavigation';
 
 interface Palestra {
   id: string;
@@ -15,21 +16,6 @@ interface Participante {
   entrada: string;
   saida: string;
 }
-
-const PalestraCard: React.FC<{ palestra: Palestra; isSelected: boolean; onClick: () => void }> = ({ 
-  palestra, 
-  isSelected, 
-  onClick 
-}) => (
-  <div 
-    className={`p-4 cursor-pointer border-l-4 transition-colors ${
-      isSelected ? 'bg-red-600 text-white border-red-800' : 'bg-gray-200 text-gray-800 border-gray-300'
-    }`}
-    onClick={onClick}
-  >
-    {palestra.nome}
-  </div>
-);
 
 
 const AttendanceControl: React.FC<{ presentes: Participante[]; ausentes: Participante[] }> = ({ 
@@ -129,20 +115,7 @@ const App: React.FC = () => {
                 </div>
               </div>
               
-              <div className="p-4">
-                <h3 className="text-center font-bold text-gray-700 mb-3">Palestras</h3>
-                <div className="space-y-2">
-                  {palestras.map(palestra => (
-                    <PalestraCard
-                      key={palestra.id}
-                      palestra={palestra}
-                      isSelected={selectedPalestra === palestra.id}
-                      onClick={() => setSelectedPalestra(palestra.id)}
-                    />
-                  ))}
-                  <div className="bg-gray-300 p-4 rounded"></div>
-                </div>
-              </div>
+              <PalestrasNavigation />
             </div>
           </div>
           
