@@ -1,14 +1,8 @@
-import React, { useState } from 'react';
-import { Play, Square } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { LectureDetail } from '../components/LectureDetail';
-import { PalestrasNavigation } from '../components/PalestrasNavigation';
-
-interface Palestra {
-  id: string;
-  nome: string;
-  data: string;
-  descricao: string;
-}
+import { PalestrasNavigation, type Palestras } from '../components/PalestrasNavigation';
+import { api } from '../api/api';
+import { Calendar } from 'lucide-react';
 
 interface Participante {
   id: string;
@@ -16,7 +10,6 @@ interface Participante {
   entrada: string;
   saida: string;
 }
-
 
 const AttendanceControl: React.FC<{ presentes: Participante[]; ausentes: Participante[] }> = ({ 
   presentes, 
@@ -66,19 +59,11 @@ const AttendanceControl: React.FC<{ presentes: Participante[]; ausentes: Partici
 );
 
 const App: React.FC = () => {
-  const [selectedPalestra, setSelectedPalestra] = useState<string>('1');
-  const [tempo, setTempo] = useState('00:00');
-  const [isRunning, setIsRunning] = useState(false);
+  const [palestras, setPalestras] = useState<Palestras[]>([]);
+  const [selectedPalestraId, setSelectedPalestraId] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  const palestras: Palestra[] = [
-    {
-      id: '1',
-      nome: 'Uso de affordances do ux/ui',
-      data: '25/12 - 15:00 - 16:00',
-      descricao: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris nulla libero, pellentesque aliquet fringendum et, vulputate blandit libero. Cras vulputate cursus arcu. In efficitur augue aliquet efficitur. Ut porttitor posuere velit, non iaculis neque accumsan quis. Nulla mauris massa, lobortis in, rhoncus quis, sacem ac, egestas iaculis urna. Suspendisse augue enim, placerat id tincidunt a, placerat iaculis est. Aenean rhoncus mauris, parietur ac neque massa, quis.'
-    }
-  ];
-
+  // Mock de participantes - você pode buscar do backend baseado na palestra selecionada
   const ausentes: Participante[] = [
     { id: '1', nome: 'João Silva', entrada: '', saida: '' },
     { id: '2', nome: 'Maria Santos', entrada: '', saida: '' },
@@ -95,36 +80,58 @@ const App: React.FC = () => {
     { id: '10', nome: 'Fernando Alves', entrada: '15:10', saida: '16:00' },
   ];
 
-  const handleToggleTimer = () => {
-    setIsRunning(!isRunning);
-  };
+  // Buscar palestras do backend
+  useEffect(() => {
+    const fetchPalestras = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.get('/palestras');
+        setPalestras(response.data);
+        
+        // Selecionar automaticamente a primeira palestra
+        if (response.data && response.data.length > 0) {
+          setSelectedPalestraId(response.data[0].id);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar palestras:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const selectedPalestraData = palestras.find(p => p.id === selectedPalestra) || palestras[0];
+    fetchPalestras();
+  }, []);
+
+  // Encontrar a palestra selecionada
+  const selectedPalestra = palestras.find(p => p.id === selectedPalestraId) || null;
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-4 gap-6">
           <div className="col-span-1">
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-8">
               <div className="bg-gray-300 p-4 flex items-center gap-4">
-                <div className="w-24 h-24 bg-gray-400 rounded"></div>
+                <div className="w-24 h-24 bg-gray-400 rounded flex items-center justify-center">
+                  <Calendar size={32} className="text-gray-600" />
+                </div>
                 <div className="flex-1 space-y-2">
                   <div className="h-3 bg-gray-400 rounded w-3/4"></div>
                   <div className="h-3 bg-gray-400 rounded w-1/2"></div>
                 </div>
               </div>
               
-              <PalestrasNavigation />
+              <PalestrasNavigation
+                palestras={palestras}
+                selectedPalestraId={selectedPalestraId}
+                onSelectPalestra={setSelectedPalestraId}
+                isLoading={isLoading}
+              />
             </div>
           </div>
           
           <div className="col-span-3 space-y-6">
-            <LectureDetail
-              date={new Date()}
-              desc='Palestra sobre o controle emocional de chimpanzes sul africanos enquanto jogam clash royale Palestra sobre o controle emocional de chimpanzes sul africanos enquanto jogam clash royalePalestra sobre o controle emocional de chimpanzes sul africanos enquanto jogam clash royalePalestra sobre o controle emocional de chimpanzes sul africanos enquanto jogam clash royalePalestra sobre o controle emocional de chimpanzes sul africanos enquanto jogam clash royale'
-              name='Controle Emocional: nao joga mago na Pekka' 
-            />
+            <LectureDetail palestra={selectedPalestra} />
             
             <AttendanceControl
               presentes={presentes}
