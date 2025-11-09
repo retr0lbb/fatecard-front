@@ -2,12 +2,81 @@ import { useEffect, useRef, useState } from "react";
 import type { Palestras } from "./PalestrasNavigation";
 import { Calendar, Pause, Play, Square } from "lucide-react";
 
+interface TimerState {
+  palestraId: string;
+  tempoBase: number; // Tempo acumulado quando pausou
+  isRunning: boolean;
+  isConcluida: boolean;
+  timestampInicio: number | null; // Quando começou a rodar pela última vez
+}
+
 export const LectureDetail: React.FC<{ palestra: Palestras | null }> = ({ palestra }) => {
   const [tempo, setTempo] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [isConcluida, setIsConcluida] = useState(false);
   const [showConfirmacao, setShowConfirmacao] = useState(false);
+  const [timestampInicio, setTimestampInicio] = useState<number | null>(null);
   const intervalRef = useRef<number | null>(null);
+
+  // Carregar estado salvo quando a palestra mudar
+  useEffect(() => {
+    if (!palestra) return;
+
+    const storageKey = `palestra_timer_${palestra.id}`;
+    const savedState = localStorage.getItem(storageKey);
+
+    if (savedState) {
+      const state: TimerState = JSON.parse(savedState);
+      
+      // Se estava rodando quando a página foi fechada, calcular tempo decorrido
+      if (state.isRunning && state.timestampInicio) {
+        const tempoDecorrido = Math.floor((Date.now() - state.timestampInicio) / 1000);
+        const tempoTotal = state.tempoBase + tempoDecorrido;
+        setTempo(tempoTotal);
+        setIsRunning(true);
+        setTimestampInicio(state.timestampInicio); // Manter o timestamp original
+      } else {
+        setTempo(state.tempoBase);
+        setIsRunning(false);
+        setTimestampInicio(null);
+      }
+      
+      setIsConcluida(state.isConcluida);
+    } else {
+      // Reset para nova palestra sem estado salvo
+      setTempo(0);
+      setIsRunning(false);
+      setIsConcluida(false);
+      setTimestampInicio(null);
+    }
+    
+    setShowConfirmacao(false);
+  }, [palestra?.id]);
+
+  // Salvar estado no localStorage quando pausar ou estado mudar
+  useEffect(() => {
+    if (!palestra) return;
+
+    const storageKey = `palestra_timer_${palestra.id}`;
+    
+    // Calcular tempo base (tempo acumulado até agora)
+    let tempoBase = tempo;
+    if (isRunning && timestampInicio) {
+      // Se está rodando, tempo base é o tempo atual menos o que já passou nesta sessão
+      const tempoNestaSessao = Math.floor((Date.now() - timestampInicio) / 1000);
+      tempoBase = tempo - tempoNestaSessao;
+    }
+    
+    const state: TimerState = {
+      palestraId: palestra.id,
+      tempoBase,
+      isRunning,
+      isConcluida,
+      timestampInicio: isRunning ? timestampInicio : null
+    };
+
+    localStorage.setItem(storageKey, JSON.stringify(state));
+  }, [palestra?.id, tempo, isRunning, isConcluida, timestampInicio]);
 
   useEffect(() => {
     if (isRunning) {
@@ -28,14 +97,6 @@ export const LectureDetail: React.FC<{ palestra: Palestras | null }> = ({ palest
     };
   }, [isRunning]);
 
-  // Reset quando trocar de palestra
-  useEffect(() => {
-    setTempo(0);
-    setIsRunning(false);
-    setIsConcluida(false);
-    setShowConfirmacao(false);
-  }, [palestra?.id]);
-
   const formatTempo = (seconds: number): string => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -44,6 +105,13 @@ export const LectureDetail: React.FC<{ palestra: Palestras | null }> = ({ palest
   };
 
   const handleToggle = () => {
+    if (!isRunning) {
+      // Ao iniciar, salvar o timestamp atual
+      setTimestampInicio(Date.now());
+    } else {
+      // Ao pausar, limpar o timestamp
+      setTimestampInicio(null);
+    }
     setIsRunning(prev => !prev);
   };
 
@@ -56,7 +124,13 @@ export const LectureDetail: React.FC<{ palestra: Palestras | null }> = ({ palest
     setTempo(0);
     setIsConcluida(true);
     setShowConfirmacao(false);
-    // Aqui você pode fazer uma chamada à API para atualizar o status da palestra
+    setTimestampInicio(null);
+    
+    // Limpar estado salvo
+    if (palestra) {
+      const storageKey = `palestra_timer_${palestra.id}`;
+      localStorage.removeItem(storageKey);
+    }
   };
 
   const handleCancelarEncerramento = () => {
