@@ -3,6 +3,7 @@ import { LectureDetail } from '../components/LectureDetail';
 import { PalestrasNavigation, type Palestras } from '../components/PalestrasNavigation';
 import { api } from '../api/api';
 import { Calendar } from 'lucide-react';
+import { AttendanceControl } from '../components/attendance-controll';
 
 interface Participante {
   id: string;
@@ -11,52 +12,7 @@ interface Participante {
   saida: string;
 }
 
-const AttendanceControl: React.FC<{ presentes: Participante[]; ausentes: Participante[] }> = ({ 
-  presentes, 
-  ausentes 
-}) => (
-  <div className="bg-white border-4 border-red-600 rounded-lg overflow-hidden">
-    <div className="bg-red-600 text-white px-4 py-2">
-      <h2 className="text-xl font-bold">Controle de presença</h2>
-    </div>
-    
-    <div className="grid grid-cols-2 gap-4 p-6">
-      <div className="bg-gray-200 rounded-lg overflow-hidden">
-        <div className="bg-black text-white text-center py-3 font-bold">
-          Ausentes
-        </div>
-        <div className="p-4 space-y-2">
-          {ausentes.map(p => (
-            <div key={p.id} className="bg-gray-300 p-3 rounded">
-              {p.nome}
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <div className="bg-gray-200 rounded-lg overflow-hidden">
-        <div className="bg-black text-white py-3 px-4 font-bold flex justify-between">
-          <span>Presentes</span>
-          <div className="flex gap-4 text-sm">
-            <span>entrada</span>
-            <span>saída</span>
-          </div>
-        </div>
-        <div className="p-4 space-y-2">
-          {presentes.map(p => (
-            <div key={p.id} className="bg-white rounded flex items-center">
-              <div className="flex-1 p-3">{p.nome}</div>
-              <div className="flex gap-2 pr-3">
-                <div className="bg-gray-300 px-3 py-1 rounded text-sm">{p.entrada}</div>
-                <div className="bg-gray-300 px-3 py-1 rounded text-sm">{p.saida}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
-);
+
 
 const App: React.FC = () => {
   const [palestras, setPalestras] = useState<Palestras[]>([]);
@@ -133,10 +89,7 @@ const App: React.FC = () => {
           <div className="col-span-3 space-y-6">
             <LectureDetail palestra={selectedPalestra} />
             
-            <AttendanceControl
-              presentes={presentes}
-              ausentes={ausentes}
-            />
+            <AttendanceControl palestra_id={selectedPalestra?.id ?? ""} />
           </div>
         </div>
       </div>
